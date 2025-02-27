@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Image Decryptor",
+  "version": "1.0",
+  "description": "Déchiffre une image à l'aide d'une clé.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+  }
+}
