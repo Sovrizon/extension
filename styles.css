@@ -4,16 +4,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
     font-family: Arial, sans-serif;
+    min-width: 360px;
+    min-height: 500px; /* Augmente la hauteur pour éviter l'effet colonne */
 }
+
 
 .container {
     background-color: white;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    padding: 24px;
-    width: 1000px;
+    padding: 20px;
+    width: 360px;
+    max-width : 100%;
     text-align: center;
 }
 
