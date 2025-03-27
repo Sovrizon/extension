@@ -14,48 +14,141 @@ async function encryptImageWithKey(base64Image, keyBase64) {
     return btoa(String.fromCharCode(...result));
 }
 
+function fixBase64Padding(str) {
+    const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = 4 - (base64.length % 4);
+    if (padding !== 4) {
+        return base64 + '='.repeat(padding);
+    }
+    return base64;  // <== ce return est essentiel
+}
+
+function base64ToUint8Array(base64String) {
+    try {
+        const fixed = fixBase64Padding(base64String);
+        if (!fixed || typeof fixed !== "string") {
+            console.error("⚠️ Base64 mal formé ou vide :", base64String);
+            return new Uint8Array(); // renvoie un tableau vide au lieu d'undefined
+        }
+
+        const binaryString = atob(fixed);
+        return Uint8Array.from(binaryString, c => c.charCodeAt(0));
+    } catch (err) {
+        console.error("❌ Erreur de décodage base64 :", err, "| Base64 reçu :", base64String.slice(0, 30) + "...");
+        return new Uint8Array(); // fallback pour éviter une erreur .slice
+    }
+}
+
+async function decryptImageWithKey(base64Encrypted, keyBase64) {
+    const encryptedBytes = base64ToUint8Array(base64Encrypted);
+    const keyBytes = base64ToUint8Array(keyBase64);
+
+    if (!encryptedBytes || encryptedBytes.length < 13) {
+        console.error("❌ Données chiffrées invalides ou trop courtes :", encryptedBytes);
+        throw new Error("Encrypted data is too short or malformed.");
+    }
+
+    const iv = encryptedBytes.slice(0, 12);
+    const data = encryptedBytes.slice(12);
+
+    const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+
+    const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+    const decryptedBytes = new Uint8Array(decryptedBuffer);
+
+
+    // 💾 Enregistrement direct de l’image déchiffrée
+    // const blob = new Blob([decryptedBuffer], { type: "image/png" });
+    // const url = URL.createObjectURL(blob);
+    // const link = document.createElement("a");
+    // link.href = url;
+    // link.download = "decrypted_image.png";
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+
+
+    // URL.revokeObjectURL(url);
+
+
+    return btoa(String.fromCharCode(...decryptedBytes));
+
+}
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.action) {
 
-        // 🔓 Déchiffrement des images
+        // 🔐 Stocke les données et attend que le token soit fourni via popup
         case "decrypt_with_token": {
-            console.log("📩 Message decrypt_with_token reçu dans background.js");
+            console.log("📩 decrypt_with_token reçu sans token (attente via popup)");
 
-            const { token, username, image_ids, encrypted_images } = message.data;
-            console.log("🔑 Token reçu :", token, "| 👤 Utilisateur :", username);
-
-            image_ids.forEach((image_id) => {
-                fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ token, username })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        const encryptedImage = encrypted_images[image_id];
-
-                        decryptImageWithKey(encryptedImage, data.key).then((decryptedImage) => {
-                            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                                if (tabs.length > 0) {
-                                    chrome.tabs.sendMessage(tabs[0].id, {
-                                        source: "sovrizon-extension",
-                                        action: "receive_key",
-                                        image_id,
-                                        decrypted_image: decryptedImage,
-                                        valid: data.valid
-                                    });
-                                }
-                            });
-                        });
-                    })
-                    .catch(err => {
-                        console.error(`❌ Erreur pour l’image ${image_id} :`, err);
-                    });
+            chrome.storage.local.set({ decrypt_payload: message.data }, () => {
+                console.log("🕒 Données stockées dans decrypt_payload. En attente du token via popup...");
             });
+
             break;
         }
+
+
+        // 🔑 Réception du token depuis popup.js
+        case "set_token": {
+            const token = message.data.token;
+            console.log("📥 Token reçu depuis popup :", token);
+
+            // Stocke le token
+            chrome.storage.local.set({ trust_token: token }, () => {
+                console.log("✅ Token stocké, déclenchement de decrypt_with_token");
+
+                // Récupère les données précédemment envoyées par Home.jsx
+                chrome.storage.local.get(["decrypt_payload"], ({ decrypt_payload }) => {
+                    if (!decrypt_payload) {
+                        console.error("❌ Aucun payload de déchiffrement en attente.");
+                        return;
+                    }
+
+                    const { username, image_ids, encrypted_images } = decrypt_payload;
+
+                    image_ids.forEach((image_id) => {
+                        fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ token, username })
+                        })
+                            .then(res => res.json())
+                            .then(async data => {
+                                const encryptedImage = encrypted_images[image_id];
+                                console.log("🔍 Tentative de déchiffrement :", {
+                                    image_id,
+                                    encryptedImage: encrypted_images[image_id],
+                                    key: data.key
+                                });
+                                const decryptedImage = await decryptImageWithKey(encryptedImage, data.key);
+                                // console.log("🔓 Image déchiffrée pour", decryptedImage);
+
+                                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                                    if (tabs.length > 0) {
+                                        chrome.tabs.sendMessage(tabs[0].id, {
+                                            source: "sovrizon-extension",
+                                            action: "receive_key",
+                                            image_id,
+                                            decrypted_image: decryptedImage,
+                                            valid: data.valid
+                                        });
+                                    }
+                                });
+                            })
+                            .catch(err => {
+                                console.error(`❌ Erreur pour ${image_id} :`, err);
+                            });
+                    });
+                });
+            });
+
+            break;
+        }
+
+
 
         // 🆕 Enregistrement utilisateur
         case "register_user": {
@@ -126,6 +219,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 });
             break;
         }
+
+
+        // 🔐 Déchiffrement des images
+        case "decrypt_with_token": {
+            console.log("📩 Message decrypt_with_token reçu dans background.js");
+
+            const { token, username, image_ids, encrypted_images } = message.data;
+            console.log("🔑 Token reçu :", token, "| 👤 Utilisateur :", username);
+
+            image_ids.forEach((image_id) => {
+                fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token, username })
+                })
+                    .then(res => res.json())
+                    .then(async data => {
+                        console.log(`🔓 Clé récupérée pour ${image_id} :`, data.key);
+
+                        const encryptedImage = encrypted_images[image_id];
+                        const decryptedImage = await decryptImageWithKey(encryptedImage, data.key);
+
+                        // Transmission de l’image déchiffrée au content script
+                        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                            if (tabs.length > 0) {
+                                chrome.tabs.sendMessage(tabs[0].id, {
+                                    source: "sovrizon-extension",
+                                    action: "receive_key",
+                                    image_id,
+                                    decrypted_image: decryptedImage,
+                                    valid: data.valid
+                                });
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.error(`❌ Erreur lors de la récupération ou du déchiffrement de ${image_id} :`, err);
+                    });
+            });
+
+            break;
+        }
+
+
         default:
             console.warn("❔ Action non reconnue :", message.action);
     }

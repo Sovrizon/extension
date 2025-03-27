@@ -42,4 +42,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       data: message.data
     }, "*");
   }
+
+  // 🔓 Reçoit image déchiffrée et la transmet au frontend
+  if (message.action === "receive_key") {
+    console.log("📥 Image déchiffrée reçue du background :", message);
+
+    const { image_id, decrypted_image, valid } = message;
+
+    if (!image_id || !decrypted_image) {
+      console.error("❌ Données invalides reçues :", message);
+      return;
+    }
+
+    window.postMessage({
+      source: "sovrizon-extension",
+      action: "receive_key",
+      image_id,
+      decrypted_image,
+      valid
+    }, "*");
+  }
 });
