@@ -15,11 +15,13 @@
   "permissions": [
     "storage",
     "scripting",
-    "activeTab"
+    "activeTab",
+    "tabs",
+    "runtime"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "host_permissions":
+    ["http://localhost:5173/*", "http://localhost:8300/*"]
+  ,
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
