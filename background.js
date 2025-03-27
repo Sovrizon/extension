@@ -1,4 +1,17 @@
+function uint8ToBase64(bytes) {
+    let binary = '';
+    const chunkSize = 0x8000; // 32k
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+    }
+    return btoa(binary);
+}
+
 async function encryptImageWithKey(base64Image, keyBase64) {
+    if (typeof base64Image !== 'string' || base64Image.length > 5_000_000) {
+        throw new Error("📛 Image invalide ou trop lourde pour le chiffrement.");
+    }
+
     const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const imageBytes = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
@@ -11,12 +24,26 @@ async function encryptImageWithKey(base64Image, keyBase64) {
     result.set(iv);
     result.set(encryptedBytes, iv.length);
 
-    return btoa(String.fromCharCode(...result));
+    return uint8ToBase64(result);
+}
+
+
+function uint8ToBase64(bytes) {
+    let binary = '';
+    const chunkSize = 0x8000; // 32k
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+    }
+    return btoa(binary);
 }
 
 async function decryptImageWithKey(base64Encrypted, keyBase64) {
     if (!keyBase64 || typeof keyBase64 !== 'string') {
         throw new Error("❌ Clé de déchiffrement manquante ou invalide.");
+    }
+
+    if (typeof base64Encrypted !== 'string' || base64Encrypted.length > 5_000_000) {
+        throw new Error("❌ Données chiffrées invalides ou trop lourdes.");
     }
 
     const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
@@ -32,7 +59,7 @@ async function decryptImageWithKey(base64Encrypted, keyBase64) {
     const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
     const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
 
-    return btoa(String.fromCharCode(...new Uint8Array(decryptedBuffer)));
+    return uint8ToBase64(new Uint8Array(decryptedBuffer));
 }
 
     // 💾 Enregistrement direct de l’image déchiffrée
