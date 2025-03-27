@@ -14,48 +14,26 @@ async function encryptImageWithKey(base64Image, keyBase64) {
     return btoa(String.fromCharCode(...result));
 }
 
-function fixBase64Padding(str) {
-    const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-    const padding = 4 - (base64.length % 4);
-    if (padding !== 4) {
-        return base64 + '='.repeat(padding);
-    }
-    return base64;  // <== ce return est essentiel
-}
-
-function base64ToUint8Array(base64String) {
-    try {
-        const fixed = fixBase64Padding(base64String);
-        if (!fixed || typeof fixed !== "string") {
-            console.error("⚠️ Base64 mal formé ou vide :", base64String);
-            return new Uint8Array(); // renvoie un tableau vide au lieu d'undefined
-        }
-
-        const binaryString = atob(fixed);
-        return Uint8Array.from(binaryString, c => c.charCodeAt(0));
-    } catch (err) {
-        console.error("❌ Erreur de décodage base64 :", err, "| Base64 reçu :", base64String.slice(0, 30) + "...");
-        return new Uint8Array(); // fallback pour éviter une erreur .slice
-    }
-}
-
 async function decryptImageWithKey(base64Encrypted, keyBase64) {
-    const encryptedBytes = base64ToUint8Array(base64Encrypted);
-    const keyBytes = base64ToUint8Array(keyBase64);
+    if (!keyBase64 || typeof keyBase64 !== 'string') {
+        throw new Error("❌ Clé de déchiffrement manquante ou invalide.");
+    }
 
-    if (!encryptedBytes || encryptedBytes.length < 13) {
-        console.error("❌ Données chiffrées invalides ou trop courtes :", encryptedBytes);
-        throw new Error("Encrypted data is too short or malformed.");
+    const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+    const encryptedBytes = Uint8Array.from(atob(base64Encrypted), c => c.charCodeAt(0));
+
+    if (encryptedBytes.length < 13) {
+        throw new Error("❌ Données chiffrées invalides ou trop courtes.");
     }
 
     const iv = encryptedBytes.slice(0, 12);
     const data = encryptedBytes.slice(12);
 
     const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
-
     const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
-    const decryptedBytes = new Uint8Array(decryptedBuffer);
 
+    return btoa(String.fromCharCode(...new Uint8Array(decryptedBuffer)));
+}
 
     // 💾 Enregistrement direct de l’image déchiffrée
     // const blob = new Blob([decryptedBuffer], { type: "image/png" });
@@ -71,9 +49,6 @@ async function decryptImageWithKey(base64Encrypted, keyBase64) {
     // URL.revokeObjectURL(url);
 
 
-    return btoa(String.fromCharCode(...decryptedBytes));
-
-}
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -267,3 +242,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.warn("❔ Action non reconnue :", message.action);
     }
 });
+
+
+function handleDecryptWithToken(payload) {
+    const { username, image_ids, encrypted_images } = payload;
+
+    chrome.storage.local.get(["trust_token"], ({ trust_token }) => {
+        if (!trust_token) {
+            console.error("❌ Aucun token enregistré pour déchiffrement.");
+            return;
+        }
+
+        image_ids.forEach((image_id) => {
+            fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: trust_token, username })
+            })
+                .then(res => res.json())
+                .then(async data => {
+                    const encryptedImage = encrypted_images[image_id];
+                    console.log("🔍 Tentative de déchiffrement :", {
+                        image_id,
+                        encryptedImage,
+                        key: data.key
+                    });
+
+                    const decryptedImage = await decryptImageWithKey(encryptedImage, data.key);
+
+                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                        if (tabs.length > 0) {
+                            chrome.tabs.sendMessage(tabs[0].id, {
+                                source: "sovrizon-extension",
+                                action: "receive_key",
+                                image_id,
+                                decrypted_image: decryptedImage,
+                                valid: data.valid
+                            });
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error(`❌ Erreur pour ${image_id} :`, err);
+                });
+        });
+    });
+}

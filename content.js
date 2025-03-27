@@ -59,7 +59,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       action: "receive_key",
       image_id,
       decrypted_image,
-      valid
+      valid: valid ?? true  // ✅ ici on assure que valid = true par défaut
     }, "*");
   }
 });
