@@ -1,41 +1,123 @@
-document.getElementById("decryptButton").addEventListener("click", async () => {
-    const file = document.getElementById("imageInput").files[0];
-    const key = document.getElementById("keyInput").value;
+function updateTokenDisplayAndFields() {
+    const tokenDisplay = document.getElementById("tokenDisplay");
+    const tokenInput = document.getElementById("tokenInput");
+    const validityTokenInput = document.getElementById("validityTokenInput");
 
-    if (!file || !key) {
-        alert("Veuillez sélectionner une image et entrer une clé.");
-        return;
+    chrome.storage.local.get("trust_token", ({ trust_token }) => {
+        if (trust_token) {
+            console.log("🔐 trust_token récupéré depuis chrome.storage :", trust_token);
+            tokenDisplay.textContent = `Token actuel : ${trust_token}`;
+            if (tokenInput) tokenInput.value = trust_token;
+            if (validityTokenInput) validityTokenInput.value = trust_token;
+        } else {
+            console.log("ℹ️ Aucun trust_token stocké.");
+            tokenDisplay.textContent = "Aucun token stocké.";
+            if (tokenInput) tokenInput.value = "";
+            if (validityTokenInput) validityTokenInput.value = "";
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    updateTokenDisplayAndFields();
+
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === "local" && (changes.trust_token || changes.trust_token_updated_at)) {
+            updateTokenDisplayAndFields();
+        }
+    });
+
+    const tokenInput = document.getElementById("tokenInput");
+    const tokenDisplay = document.getElementById("tokenDisplay");
+
+    // Charger le token existant depuis chrome.storage.local
+    chrome.storage.local.get("trust_token", ({ trust_token }) => {
+        if (trust_token) {
+            tokenDisplay.textContent = `Token actuel : ${trust_token}`;
+
+            const validityTokenInput = document.getElementById("validityTokenInput");
+            if (validityTokenInput) {
+                validityTokenInput.value = trust_token;
+            }
+
+            const tokenInput = document.getElementById("tokenInput");
+            if (tokenInput) {
+                tokenInput.value = trust_token;  // ✅ ici on pré-remplit aussi pour le déchiffrement
+            }
+
+        } else {
+            tokenDisplay.textContent = "Aucun token stocké.";
+        }
+    });
+
+    // Enregistrer un nouveau token via le champ d'entrée
+    document.getElementById("decryptButton").addEventListener("click", () => {
+        const token = tokenInput.value;
+
+        chrome.runtime.sendMessage({
+            from: "popup",
+            action: "set_token",
+            data: { token }
+        });
+
+        chrome.storage.local.set({ trust_token: token }, () => {
+            tokenDisplay.textContent = `Token actuel : ${token}`;
+        });
+    });
+
+    // 🎛️ Rendre invalide
+    document.getElementById("invalidateButton").addEventListener("click", () => {
+        updateImageValidity(false);
+    });
+
+    // ✅ Rendre valide
+    document.getElementById("validateButton").addEventListener("click", () => {
+        updateImageValidity(true);
+    });
+
+    function updateImageValidity(valid) {
+        const username = document.getElementById("ownerInput").value.trim();
+        const imageId = document.getElementById("imageIdInput").value.trim();
+        const token = document.getElementById("validityTokenInput").value.trim();
+        const status = document.getElementById("validityStatus");
+
+        status.className = "status info";
+        status.textContent = "";
+
+        if (!username || !imageId || !token) {
+            status.textContent = "❌ Veuillez remplir tous les champs.";
+            return;
+        }
+
+        fetch(`http://127.0.0.1:8300/update_validity/${username}/${imageId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ valid, token })
+        })
+            .then(async res => {
+                if (!res.ok) {
+                    const text = await res.text();
+                    let msg = "Erreur inconnue.";
+
+                    if (res.status === 403) msg = "❌ Token invalide ou nom d'utilisateur incorrect.";
+                    else if (res.status === 404) msg = "❌ Clé non trouvée pour cette image.";
+                    else msg = `❌ Erreur ${res.status} : ${text}`;
+
+                    throw new Error(msg);
+                }
+                return res.json();
+            })
+            .then(data => {
+                status.className = "status success";
+                status.textContent = `✅ Succès : ${data.message}`;
+            })
+            .catch(err => {
+                console.error(err);
+                status.className = "status error";
+                status.textContent = `❌ Erreur : ${err.message}`;
+            });
     }
 
-    const reader = new FileReader();
-    reader.onload = async function(event) {
-        const encryptedData = new Uint8Array(event.target.result);
-        const decryptedData = await decryptImage(encryptedData, key);
-        displayImage(decryptedData);
-    };
-    reader.readAsArrayBuffer(file);
 });
-
-async function decryptImage(encryptedData, key) {
-    // Exemple avec AES-GCM
-    const keyBuffer = new TextEncoder().encode(key.padEnd(32, "0")).slice(0, 32);
-    const cryptoKey = await crypto.subtle.importKey("raw", keyBuffer, { name: "AES-GCM" }, false, ["decrypt"]);
-    try {
-        const iv = encryptedData.slice(0, 12); // IV stocké dans l'image chiffrée
-        const cipherText = encryptedData.slice(12);
-        const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, cipherText);
-        return new Uint8Array(decryptedBuffer);
-    } catch (e) {
-        alert("Échec du déchiffrement !");
-        console.error(e);
-        return null;
-    }
-}
-
-function displayImage(imageData) {
-    if (!imageData) return;
-    const blob = new Blob([imageData], { type: "image/png" });
-    const img = new Image();
-    img.src = URL.createObjectURL(blob);
-    document.body.appendChild(img);
-}
