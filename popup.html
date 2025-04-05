@@ -4,39 +4,300 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Déchiffrement d'image</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --primary: #b22133;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --success-hover: #059669;
+            --border-radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            color: #1f2937;
+        }
+
+        .container {
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h2 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.875rem;
+        }
+
+        .content {
+            padding: 1.5rem;
+        }
+
+        .section {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #f3f4f6;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .section-title h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.875rem;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            background-color: #f9fafb;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+            background-color: white;
+        }
+
+        input::placeholder {
+            color: #9ca3af;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .token-display {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            word-break: break-all;
+            font-family: 'Roboto Mono', monospace;
+            border: 1px dashed #e5e7eb;
+            display: none;
+        }
+
+        .token-display.active {
+            display: block;
+        }
+
+        .status {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #f3f4f6;
+            text-align: center;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 1.5rem 0;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Pour les icônes */
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 flex items-start justify-center min-h-[200px] p-4">
-<div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-xs space-y-6">
-
-    <!-- SECTION 1 : Déchiffrement -->
-    <div>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">Déchiffrez les posts</h3>
-        <input type="text" id="tokenInput" placeholder="Entrez votre token" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
-        <button id="decryptButton" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Déchiffrer</button>
-        <p id="tokenDisplay" class="text-xs text-gray-600 mt-2 break-all"></p>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Extension Secugram</h2>
+        <p>Déchiffrez et gérez les accès à vos images</p>
     </div>
 
-    <hr>
+    <div class="content">
+        <!-- SECTION 1 : Déchiffrement -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-key"></i>
+                <h3>Déchiffrement des posts</h3>
+            </div>
 
-    <!-- SECTION 2 : Changer validité -->
-    <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Modifier la validité d’une image</h3>
+            <input type="text" id="tokenInput" placeholder="Entrez votre token de déchiffrement" autocomplete="off">
 
-        <input type="text" id="ownerInput" placeholder="Nom d’utilisateur" class="w-full p-2 border rounded-lg mb-2">
-        <input type="text" id="imageIdInput" placeholder="ID de l’image" class="w-full p-2 border rounded-lg mb-2">
-        <input type="text" id="validityTokenInput" placeholder="Token utilisateur" class="w-full p-2 border rounded-lg mb-2">
+            <button id="decryptButton" class="btn-primary">
+                <i class="fas fa-lock-open"></i>
+                Déchiffrer les posts
+            </button>
 
-        <button id="invalidateButton" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition mb-2">
-            Rendre invalide
-        </button>
-        <button id="validateButton" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
-            Rendre valide
-        </button>
-        <p id="validityStatus" class="text-xs text-gray-600 mt-2 break-all"></p>
+            <div id="tokenDisplay" class="token-display">
+                Le token sera affiché ici
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 2 : Changer validité -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Gestion des accès</h3>
+            </div>
+
+            <input type="text" id="ownerInput" placeholder="Nom d'utilisateur" autocomplete="off">
+            <input type="text" id="imageIdInput" placeholder="ID de l'image" autocomplete="off">
+            <input type="text" id="validityTokenInput" placeholder="Token de sécurité" autocomplete="off">
+
+            <div class="button-group">
+                <button id="invalidateButton" class="btn-danger">
+                    <i class="fas fa-ban"></i>
+                    Révoquer l'accès
+                </button>
+
+                <button id="validateButton" class="btn-success">
+                    <i class="fas fa-check-circle"></i>
+                    Autoriser l'accès
+                </button>
+            </div>
+
+            <div id="validityStatus" class="status">
+                Statut: En attente d'action
+            </div>
+        </div>
     </div>
-
 </div>
+
 <script src="popup.js"></script>
+<script>
+    // Script pour l'animation d'affichage du token
+    document.getElementById('decryptButton').addEventListener('click', function() {
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        tokenDisplay.classList.add('active');
+        // Simulation pour l'aperçu - à remplacer par votre logique
+        const tokenInput = document.getElementById('tokenInput').value;
+        if (tokenInput) {
+            tokenDisplay.textContent = "Token: " + tokenInput;
+        } else {
+            tokenDisplay.textContent = "Veuillez entrer un token valide";
+        }
+    });
+</script>
 </body>
 </html>

@@ -1,4 +1,32 @@
+function updateTokenDisplayAndFields() {
+    const tokenDisplay = document.getElementById("tokenDisplay");
+    const tokenInput = document.getElementById("tokenInput");
+    const validityTokenInput = document.getElementById("validityTokenInput");
+
+    chrome.storage.local.get("trust_token", ({ trust_token }) => {
+        if (trust_token) {
+            console.log("🔐 trust_token récupéré depuis chrome.storage :", trust_token);
+            tokenDisplay.textContent = `Token actuel : ${trust_token}`;
+            if (tokenInput) tokenInput.value = trust_token;
+            if (validityTokenInput) validityTokenInput.value = trust_token;
+        } else {
+            console.log("ℹ️ Aucun trust_token stocké.");
+            tokenDisplay.textContent = "Aucun token stocké.";
+            if (tokenInput) tokenInput.value = "";
+            if (validityTokenInput) validityTokenInput.value = "";
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    updateTokenDisplayAndFields();
+
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === "local" && (changes.trust_token || changes.trust_token_updated_at)) {
+            updateTokenDisplayAndFields();
+        }
+    });
+
     const tokenInput = document.getElementById("tokenInput");
     const tokenDisplay = document.getElementById("tokenDisplay");
 
@@ -93,5 +121,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
-
-

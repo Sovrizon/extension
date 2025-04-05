@@ -264,6 +264,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
         }
 
+        case "user_logged_in": {
+            console.log("📬 Message reçu dans background :", message);
+            const username = message.username;
+            if (!username) return;
+
+            fetch(`http://127.0.0.1:8300/trust_token/${username}`)
+                .then(res => res.json())
+                .then(({ token }) => {
+                    if (token) {
+                        chrome.storage.local.set({
+                            trust_token: token,
+                            trust_token_updated_at: Date.now()
+                        });
+                        console.log("✅ Token mis à jour automatiquement pour", username);
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Erreur récupération trust_token pour", username, ":", err);
+                });
+            break;
+        }
 
         default:
             console.warn("❔ Action non reconnue :", message.action);

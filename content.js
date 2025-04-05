@@ -63,3 +63,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }, "*");
   }
 });
+
+window.addEventListener("storage", (event) => {
+  if (event.key === "username" && event.newValue) {
+    console.log("🔍 content.js détecte changement username :", event.newValue);
+    chrome.runtime.sendMessage({
+      action: "user_logged_in",
+      username: event.newValue
+    });
+  }
+});
