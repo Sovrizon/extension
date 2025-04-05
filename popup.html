@@ -6,16 +6,37 @@
     <title>Déchiffrement d'image</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-[100px]">
-<div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-xs text-center">
-    <h3 class="text-xl font-semibold text-gray-700 mb-4">Déchiffrez les posts</h3>
+<body class="bg-gray-100 flex items-start justify-center min-h-[200px] p-4">
+<div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-xs space-y-6">
 
-    <input type="text" id="tokenInput" placeholder="Entrez votre token" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+    <!-- SECTION 1 : Déchiffrement -->
+    <div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Déchiffrez les posts</h3>
+        <input type="text" id="tokenInput" placeholder="Entrez votre token" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+        <button id="decryptButton" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Déchiffrer</button>
+        <p id="tokenDisplay" class="text-xs text-gray-600 mt-2 break-all"></p>
+    </div>
 
-    <button id="decryptButton" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Déchiffrer</button>
-    <p id="tokenDisplay" class="text-xs text-gray-600 mt-2 break-all"></p>
+    <hr>
+
+    <!-- SECTION 2 : Changer validité -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Modifier la validité d’une image</h3>
+
+        <input type="text" id="ownerInput" placeholder="Nom d’utilisateur" class="w-full p-2 border rounded-lg mb-2">
+        <input type="text" id="imageIdInput" placeholder="ID de l’image" class="w-full p-2 border rounded-lg mb-2">
+        <input type="text" id="validityTokenInput" placeholder="Token utilisateur" class="w-full p-2 border rounded-lg mb-2">
+
+        <button id="invalidateButton" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition mb-2">
+            Rendre invalide
+        </button>
+        <button id="validateButton" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
+            Rendre valide
+        </button>
+        <p id="validityStatus" class="text-xs text-gray-600 mt-2 break-all"></p>
+    </div>
+
 </div>
-
 <script src="popup.js"></script>
 </body>
 </html>
