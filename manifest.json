@@ -10,7 +10,8 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "permissions": [
     "storage",
@@ -30,6 +31,5 @@
       "run_at": "document_start"
 
     }
-  ],
-  "options_page": "dashboard.html"
+  ]
 }

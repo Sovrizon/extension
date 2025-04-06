@@ -30,15 +30,6 @@ async function encryptImageWithKey(base64Image, keyBase64) {
 }
 
 
-function uint8ToBase64(bytes) {
-    let binary = '';
-    const chunkSize = 0x8000; // 32k
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
-    }
-    return btoa(binary);
-}
-
 async function decryptImageWithKey(base64Encrypted, keyBase64) {
     if (!keyBase64 || typeof keyBase64 !== 'string') {
         throw new Error("❌ Clé de déchiffrement manquante ou invalide.");
@@ -279,7 +270,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             trust_token: token,
                             trust_token_updated_at: Date.now()
                         });
-                        console.log("✅ Token mis à jour automatiquement pour", username);
+                        console.log("✅ Token mis à jour automatiquement pour", username, ":", token);
                     }
                 })
                 .catch(err => {

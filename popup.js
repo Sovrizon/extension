@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Enregistrer un nouveau token via le champ d'entrée
     document.getElementById("decryptButton").addEventListener("click", () => {
+        console.log("🖱️ Bouton déchiffrer cliqué, token :", token);
         const token = tokenInput.value;
 
         chrome.runtime.sendMessage({
