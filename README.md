@@ -62,16 +62,15 @@ Une démonstration d'installation pas à pas est disponible [ici](https://youtu.
 
 ## 📦 Fonctionnalités
 
-- 🔐 **Récupération automatique du token** via le tiers de confiance (serveur externe sécurisé)
-- 💾 **Stockage local sécurisé du token** dans `chrome.storage.local`
-- 🔁 **Mise à jour automatique du token** à chaque connexion utilisateur sur Secugram
-- 🔗 **Communication directe avec le frontend** de Secugram pour déclencher le processus de déchiffrement
-- 🧭 **Requête au tiers de confiance** pour obtenir la clé de déchiffrement si le token est valide
-- 🖼️ **Déchiffrement conditionnel** des images chiffrées uniquement pour les utilisateurs autorisés
-- ❌✅ **Modification de la validité** d’une image (activer/désactiver) via l’interface popup de l’extension
-- 🔐 **Chiffrement des images** effectué côté serveur (backend Secugram), la clé est uniquement transmise via le tiers
-- 🧾 **Logs détaillés** dans la console du `background.js` pour débogage et suivi du flux
-
+- 🔐 **Gestion des tokens d'authentification** via communication sécurisée avec le tiers de confiance
+- 💾 **Persistance des données de sécurité** dans le stockage local de l'extension (`chrome.storage.local`)
+- 🔄 **Synchronisation automatique des tokens** lors de l'authentification utilisateur sur Secugram
+- 🔗 **Architecture de communication bidirectionnelle** entre le frontend Secugram et l'extension via messaging API
+- 🛡️ **Authentification sécurisée** auprès du tiers de confiance pour la récupération des clés cryptographiques
+- 🔒 **Cryptographie AES-GCM** pour le chiffrement/déchiffrement des images avec vecteur d'initialisation (IV)
+- 🚦 **Gestion des autorisations d'accès** via l'interface popup de l'extension (activation/révocation)
+- 📦 **Séparation des responsabilités** : chiffrement client-side avec clés fournies par le tiers de confiance
+- 📊 **Journalisation structurée** dans le service worker background pour audit et débogage
 ---
 
 ## 🧪 Debug
