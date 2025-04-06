@@ -1,3 +1,6 @@
+import { FRONTEND_URL, TIERS_URL } from "./config.js";
+
+
 function updateTokenDisplayAndFields() {
     const tokenDisplay = document.getElementById("tokenDisplay");
     const tokenInput = document.getElementById("tokenInput");
@@ -89,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        fetch(`http://127.0.0.1:8300/update_validity/${username}/${imageId}`, {
+        fetch(`${TIERS_URL}/update_validity/${username}/${imageId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

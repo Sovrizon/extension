@@ -1,3 +1,5 @@
+import { FRONTEND_URL, TIERS_URL } from "./config.js";
+
 function uint8ToBase64(bytes) {
     let binary = '';
     const chunkSize = 0x8000; // 32k
@@ -112,7 +114,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     const { username, image_ids, encrypted_images } = decrypt_payload;
 
                     image_ids.forEach((image_id) => {
-                        fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+                        fetch(`${TIERS_URL}/get_key/${image_id}`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ token, username })
@@ -159,7 +161,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const username = message.data.username;
             console.log("🆕 Utilisateur enregistré :", username);
 
-            fetch("http://127.0.0.1:8300/register_viewer", {
+            fetch(`${TIERS_URL}/register_viewer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ viewer_username: username })
@@ -182,7 +184,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const { image_base64, image_id, username, valid, valid_from, valid_to } = message.data;
             console.log("🔐 Chiffrement de l'image pour l'utilisateur :", username);
 
-            fetch("http://127.0.0.1:8300/set_key", {
+            fetch(`${TIERS_URL}/set_key`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -231,7 +233,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("🔑 Token reçu :", token, "| 👤 Utilisateur :", username);
 
             image_ids.forEach((image_id) => {
-                fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+                fetch(`${TIERS_URL}/get_key/${image_id}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ token, username })
@@ -269,7 +271,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const username = message.username;
             if (!username) return;
 
-            fetch(`http://127.0.0.1:8300/trust_token/${username}`)
+            fetch(`${TIERS_URL}/trust_token/${username}`)
                 .then(res => res.json())
                 .then(({ token }) => {
                     if (token) {
@@ -302,7 +304,7 @@ function handleDecryptWithToken(payload) {
         }
 
         image_ids.forEach((image_id) => {
-            fetch(`http://127.0.0.1:8300/get_key/${image_id}`, {
+            fetch(`${TIERS_URL}/get_key/${image_id}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token: trust_token, username })
