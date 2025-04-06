@@ -30,42 +30,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const tokenInput = document.getElementById("tokenInput");
-    const tokenDisplay = document.getElementById("tokenDisplay");
-
-    // Charger le token existant depuis chrome.storage.local
-    chrome.storage.local.get("trust_token", ({ trust_token }) => {
-        if (trust_token) {
-            tokenDisplay.textContent = `Token actuel : ${trust_token}`;
-
-            const validityTokenInput = document.getElementById("validityTokenInput");
-            if (validityTokenInput) {
-                validityTokenInput.value = trust_token;
-            }
-
-            const tokenInput = document.getElementById("tokenInput");
-            if (tokenInput) {
-                tokenInput.value = trust_token;  // ✅ ici on pré-remplit aussi pour le déchiffrement
-            }
-
-        } else {
-            tokenDisplay.textContent = "Aucun token stocké.";
-        }
-    });
-
     // Enregistrer un nouveau token via le champ d'entrée
     document.getElementById("decryptButton").addEventListener("click", () => {
-        console.log("🖱️ Bouton déchiffrer cliqué, token :", token);
-        const token = tokenInput.value;
+        const token = document.getElementById("tokenInput").value;
+        console.log("🖱️ Bouton 'Déchiffrer' cliqué");
+        console.log("📤 Token récupéré depuis input :", token);
+
+        if (!token) {
+            console.warn("⚠️ Aucun token saisi.");
+            document.getElementById("tokenDisplay").textContent = "❌ Aucun token saisi.";
+            return;
+        }
 
         chrome.runtime.sendMessage({
             from: "popup",
             action: "set_token",
             data: { token }
+        }, () => {
+            console.log("📨 Message 'set_token' envoyé au background");
         });
 
         chrome.storage.local.set({ trust_token: token }, () => {
-            tokenDisplay.textContent = `Token actuel : ${token}`;
+            console.log("💾 Token stocké dans chrome.storage.local");
+            document.getElementById("tokenDisplay").textContent = `Token actuel : ${token}`;
         });
     });
 
