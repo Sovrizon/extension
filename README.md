@@ -18,14 +18,15 @@ Cette extension Chrome permet aux utilisateurs de **visualiser des images chiffr
 - Manifest V3
 - Service Worker (`background.js`)
 - HTML + Tailwind CSS pour l’interface (`popup.html`)
-- Communication entre : extension ⇄ frontend ⇄ serveur de confiance
+- Communication entre : extension ⇄ frontend ⇄ tiers de confiance
 
 ---
 
 ## 🌐 Dépendances externes
 
-- `https://secugram.web.app` (frontend)
-- `https://tiers-de-confiance.onrender.com` (tiers de confiance)
+-  **Frontend Secugram** : [https://secugram-82493.web.app/](https://secugram-82493.web.app/)
+-  **Backend Secugram** : [https://secugram.onrender.com/docs](https://secugram.onrender.com/docs)
+- **Tiers de confiance** : [https://tiers-de-confiance.onrender.com/docs](https://tiers-de-confiance.onrender.com/docs)
 
 ---
 
@@ -35,10 +36,9 @@ Cette extension Chrome permet aux utilisateurs de **visualiser des images chiffr
 
 ```
 git clone https://github.com/ton-user/extension.git
-cd extension
 ```
 
-2. Ouvrir `chrome://extensions`
+2. Aller dans `chrome://extensions` dans le navigateur Chrome
 
 3. Activer **"Mode développeur"**
 
@@ -52,68 +52,30 @@ cd extension
 
 ## 🎥 Tutoriel vidéo
 
-Une démonstration d'installation pas à pas est disponible ci-dessous :
+Une démonstration d'installation pas à pas est disponible [ici](https://youtu.be/OJDMdyuysH4)
 
-▶️ [tutoriel installation extension.mp4](./media/tutoriel%20installation%20extension.mp4)
-
-> Cette vidéo montre comment charger l’extension dans Chrome, activer le mode développeur et l’utiliser avec Secugram.
+> Cette vidéo montre comment charger l’extension dans Chrome en activant le mode développeur.
 
 
---- 
-## ⚙️ Configuration
-
-Le fichier `config.js` contient les URLs utilisées pour communiquer avec les services :
-
-```
-const ENV = "production";
-
-const config = {
-development: {
-FRONTEND_URL: "http://localhost:5173/",
-TIERS_URL: "http://localhost:8300/"
-},
-production: {
-FRONTEND_URL: "https://secugram.web.app/",
-TIERS_URL: "https://tiers-de-confiance.onrender.com/"
-}
-};
-
-export const { FRONTEND_URL, TIERS_URL } = config[ENV];
-```
 
 ---
 
 ## 📦 Fonctionnalités
 
-- **Affichage du token courant** depuis `chrome.storage.local`
-- **Mise à jour automatique du token** après une connexion sur Secugram
-- **Déchiffrement conditionnel** des images après validation
-- **Changement de validité** (activer/désactiver une image chiffrée)
-- **Logs détaillés** dans la console du background
+- 🔐 **Récupération automatique du token** via le tiers de confiance (serveur externe sécurisé)
+- 💾 **Stockage local sécurisé du token** dans `chrome.storage.local`
+- 🔁 **Mise à jour automatique du token** à chaque connexion utilisateur sur Secugram
+- 🔗 **Communication directe avec le frontend** de Secugram pour déclencher le processus de déchiffrement
+- 🧭 **Requête au tiers de confiance** pour obtenir la clé de déchiffrement si le token est valide
+- 🖼️ **Déchiffrement conditionnel** des images chiffrées uniquement pour les utilisateurs autorisés
+- ❌✅ **Modification de la validité** d’une image (activer/désactiver) via l’interface popup de l’extension
+- 🔐 **Chiffrement des images** effectué côté serveur (backend Secugram), la clé est uniquement transmise via le tiers
+- 🧾 **Logs détaillés** dans la console du `background.js` pour débogage et suivi du flux
 
 ---
 
 ## 🧪 Debug
 
-- Ouvre `chrome://extensions`
-- Clique sur **"Service Worker (background.js)" > Inspecter**
-- Tu y verras les logs du déchiffrement, tokens, erreurs éventuelles
-
----
-
-## 🛑 Permissions
-
-Le `manifest.json` ne demande que les permissions nécessaires :
-
-- `"storage"` : pour mémoriser le token
-- `"activeTab"` / `"scripting"` : pour injecter les scripts de déchiffrement
-- `"host_permissions"` : uniquement pour les domaines nécessaires
-- `"tabs"` : interaction avec l’onglet actif
-
----
-
-## 📝 Licence
-
-Projet développé dans le cadre d’un projet étudiant.  
-Auteur : Loqmen ANANI  
-Licence : MIT
+- Ouvrir `chrome://extensions`
+- Cliquer sur **"Service Worker (background.js)" > Inspecter**
+- On y voit les logs du déchiffrement, tokens, erreurs éventuelles
