@@ -7,7 +7,8 @@ const config = {
     },
     production: {
         FRONTEND_URL: "https://secugram.web.app",
-        TIERS_URL: "https://tiers-de-confiance.onrender.com"
+        TIERS_URL_RENDER: "https://tiers-de-confiance.onrender.com",
+        TIERS_URL: "https://tiers-de-confiance-production.up.railway.app"
     }
 };
 
