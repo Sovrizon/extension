@@ -23,7 +23,7 @@ Ce dépôt contient le code source de l'**extension Chrome** pour le projet Sovr
 
 ---
 
-## 🚀 Installation en mode développeur
+## 🚀 Installation
 
 1. Cloner le dépôt :
 
