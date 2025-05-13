@@ -20,13 +20,6 @@ Ce dépôt contient le code source de l'**extension Chrome** pour le projet Sovr
 - HTML + Tailwind CSS pour l'interface (`popup.html`)
 - Communication entre : extension ⇄ frontend ⇄ tiers de confiance
 
----
-
-## 🌐 Dépendances externes
-
--  **Frontend Secugram** : [https://secugram-82493.web.app/](https://secugram-82493.web.app/)
--  **Backend Secugram** : [https://secugram.onrender.com/docs](https://secugram.onrender.com/docs)
-- **Tiers de confiance** : [https://tiers-de-confiance.onrender.com/docs](https://tiers-de-confiance.onrender.com/docs)
 
 ---
 
@@ -46,13 +39,8 @@ git clone https://github.com/ton-user/extension.git
 
 5. Sélectionner le dossier `extension/`
 
----
-
-## 🎥 Tutoriel vidéo
 
 Une démonstration d'installation pas à pas est disponible [ici](https://youtu.be/OJDMdyuysH4)
-
-> Cette vidéo montre comment charger l'extension dans Chrome en activant le mode développeur.
 
 ---
 
