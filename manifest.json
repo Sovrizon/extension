@@ -22,6 +22,7 @@
   ],
   "host_permissions":
     ["http://localhost:5173/*", "http://localhost:8300/*",
+      "https://localhost:5173/*", "https://localhost:8300/*",
       "https://secugram.web.app/*", "https://tiers-de-confiance.onrender.com/*",
       "https://secugram-82493.web.app/*",
       "https://secugram-production.up.railway.app/*", "https://tiers-de-confiance-production.up.railway.app/*"
