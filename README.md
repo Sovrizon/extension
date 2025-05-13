@@ -66,6 +66,15 @@ Une démonstration d'installation pas à pas est disponible [ici](https://youtu.
 
 ---
 
+
+## 🧩 Intégration système
+
+Cette extension est conçue pour fonctionner en conjonction avec :
+- L'application web [secugram](https://github.com/Sovrizon/secugram) qui chiffre les images
+- Le [tiers-de-confiance](https://github.com/sovrizon/tiers-de-confiance) qui gère les clés et tokens
+
+---
+
 ## 👥 Auteurs et Contribution
 
 Ce projet a été développé par :
